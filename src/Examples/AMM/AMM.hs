@@ -83,3 +83,15 @@ swap input = do (a, b, lt) <- get
                                  let a' = a - coerce ab `div` coerce (b + b'')
                                  put (a - a', b + b', lt)
                                  return (Left a')
+
+newtype IOState s = IOState (forall a. State s a -> IO a)
+
+setupIOState :: Show s => s -> IO (IOState s)
+setupIOState s = do
+  ref <- newIORef s
+  pure $ IOState $ \ssa -> do
+    s' <- readIORef ref
+    let (a, s'') = runState ssa s'
+    writeIORef ref s''
+    putStrLn ("state: " ++ show s'')
+    pure a
